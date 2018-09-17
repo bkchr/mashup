@@ -11,8 +11,12 @@ readme = "README.md"
 travis-ci = { repository = "dtolnay/mashup" }
 
 [dependencies]
-proc-macro-hack = "0.4"
-mashup-impl = { version = "0.1.7", path = "impl" }
+proc-macro-hack = "0.4.1"
+mashup-impl = { version = "0.1.7", path = "impl", default_features = false }
 
 [workspace]
 members = ["impl"]
+
+[features]
+default = ["std"]
+std = [ "mashup-impl/std" ]

@@ -11,8 +11,12 @@ readme = "README.md"
 proc-macro = true
 
 [dependencies]
-proc-macro-hack = "0.4"
+proc-macro-hack = "0.4.1"
 proc-macro2 = "0.4"
 
 [badges]
 travis-ci = { repository = "dtolnay/mashup" }
+
+[features]
+default = ["std"]
+std = []

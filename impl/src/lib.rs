@@ -1,4 +1,12 @@
 #![doc(html_root_url = "https://docs.rs/mashup-impl/0.1.7")]
+#![cfg_attr(not(feature = "std"), no_std)]
+#![cfg_attr(not(feature = "std"), feature(alloc))]
+
+#[cfg(not(feature = "std"))]
+extern crate alloc;
+
+#[cfg(feature = "std")]
+use std as alloc;
 
 #[macro_use]
 extern crate proc_macro_hack;
@@ -6,8 +14,10 @@ extern crate proc_macro_hack;
 extern crate proc_macro2;
 use proc_macro2::{Delimiter, Ident, TokenStream, TokenTree};
 
-use std::collections::BTreeMap as Map;
-use std::str::FromStr;
+use alloc::string::{String, ToString};
+use alloc::vec::Vec;
+use alloc::collections::BTreeMap as Map;
+use alloc::str::FromStr;
 
 proc_macro_item_impl! {
     pub fn mashup_macro_impl(s: &str) -> String {
@@ -118,7 +128,9 @@ fn make_macro(name: String, substitution_macro: SubstitutionMacro) -> String {
     let mut rules = String::new();
 
     for attr in substitution_macro.attrs {
-        attrs += &format!("#[{}]", attr);
+        attrs.push_str("#[");
+        attrs.push_str(&attr.to_string());
+        attrs.push_str("]");
     }
 
     rules += &"
@@ -173,7 +185,9 @@ fn make_macro(name: String, substitution_macro: SubstitutionMacro) -> String {
 
         let mut quadratic = String::new();
         for j in 0..substitution_macro.patterns.len() {
-            quadratic += &format!(" $v{}:tt", j);
+            quadratic.push_str(" $v");
+            quadratic.push_str(&j.to_string());
+            quadratic.push_str(":tt");
         }
 
         rules += &"
@@ -187,7 +201,7 @@ fn make_macro(name: String, substitution_macro: SubstitutionMacro) -> String {
             .replace("__mashup_replace", &name)
             .replace("__mashup_pattern", &p.tag.to_string())
             .replace("__mashup_all", &quadratic)
-            .replace("__mashup_current", &format!("$v{}", i))
+            .replace("__mashup_current", &{ let mut val = String::from("$v"); val.push_str(&i.to_string()); val })
             .replace("__mashup_continue", &quadratic.replace(":tt", ""));
     }
 
@@ -214,5 +228,10 @@ fn make_macro(name: String, substitution_macro: SubstitutionMacro) -> String {
         .replace("__mashup_replace", &name)
         .replace("__mashup_all", &all);
 
-    format!("{} macro_rules! {} {{ {} }}", attrs, name, rules)
+    attrs.push_str(" macro_rules! ");
+    attrs.push_str(&name);
+    attrs.push_str(" { ");
+    attrs.push_str(&rules);
+    attrs.push_str(" }");
+    attrs
 }
